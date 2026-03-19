@@ -1,8 +1,8 @@
 import streamlit as st
 import tempfile
 import os
-import cv2
 import numpy as np
+from PIL import Image
 
 from utils.prediction import final_prediction
 
@@ -25,9 +25,8 @@ uploaded_file = st.file_uploader(
 if uploaded_file is not None:
 
     # Show image preview
-    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-    image = cv2.imdecode(file_bytes, 1)
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = Image.open(uploaded_file).convert("RGB")
+    image_rgb = np.array(image)
 
     st.image(image_rgb, caption="Uploaded Image", use_column_width=True)
 

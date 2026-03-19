@@ -1,9 +1,9 @@
-import cv2
 import numpy as np
 import joblib
 from sklearn.cluster import KMeans
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
 from deepface import DeepFace
+from PIL import Image
 
 # ------------------ LOAD MODELS ------------------
 
@@ -23,7 +23,7 @@ base_model = MobileNetV2(
 
 def predict_nationality(img):
 
-    img_resized = cv2.resize(img, (224, 224))
+    img_resized = np.array(Image.fromarray(img).resize((224, 224)))
     img_processed = preprocess_input(img_resized)
     img_processed = np.expand_dims(img_processed, axis=0)
 
@@ -52,7 +52,7 @@ def detect_color(img):
     # Focus on lower half (clothing)
     img = img[h//2:, :]
 
-    img = cv2.resize(img, (100, 100))
+    img = np.array(Image.fromarray(img).resize((100, 100)))
     pixels = img.reshape(-1, 3)
 
     kmeans = KMeans(n_clusters=3, n_init=10)
