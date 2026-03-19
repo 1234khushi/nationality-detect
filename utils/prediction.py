@@ -2,37 +2,63 @@ import numpy as np
 import joblib
 from sklearn.cluster import KMeans
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
-from deepface import DeepFace
 from PIL import Image
+from pathlib import Path
 
 # ------------------ LOAD MODELS ------------------
 
-# Load ML model and scaler
-clf = joblib.load("/Users/khushimac/Downloads/nationality-detection/nationality_model.pkl")
-scaler = joblib.load("/Users/khushimac/Downloads/nationality-detection/scaler.pkl")
+BASE_DIR = Path(__file__).resolve().parent.parent
+MODEL_PATH = BASE_DIR / "nationality_model.pkl"
+SCALER_PATH = BASE_DIR / "scaler.pkl"
 
-# Load MobileNet (feature extractor)
-base_model = MobileNetV2(
-    weights='imagenet',
-    include_top=False,
-    input_shape=(224, 224, 3),
-    pooling='avg'
-)
+clf = None
+scaler = None
+base_model = None
+
+
+def get_classifier():
+    global clf
+    if clf is None:
+        clf = joblib.load(MODEL_PATH)
+    return clf
+
+
+def get_scaler():
+    global scaler
+    if scaler is None:
+        scaler = joblib.load(SCALER_PATH)
+    return scaler
+
+
+def get_feature_extractor():
+    global base_model
+    if base_model is None:
+        try:
+            base_model = MobileNetV2(
+                weights='imagenet',
+                include_top=False,
+                input_shape=(224, 224, 3),
+                pooling='avg'
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                "MobileNetV2 weights could not be loaded. Ensure network access is available on first run or pre-cache the TensorFlow weights."
+            ) from exc
+    return base_model
 
 # ------------------ NATIONALITY ------------------
 
 def predict_nationality(img):
-
     img_resized = np.array(Image.fromarray(img).resize((224, 224)))
     img_processed = preprocess_input(img_resized)
     img_processed = np.expand_dims(img_processed, axis=0)
 
-    feat = base_model.predict(img_processed)
+    feat = get_feature_extractor().predict(img_processed)
     feat = feat.flatten().reshape(1, -1)
 
-    feat = scaler.transform(feat)
+    feat = get_scaler().transform(feat)
 
-    pred = int(clf.predict(feat)[0])
+    pred = int(get_classifier().predict(feat)[0])
 
     label_map = {
         0: "Indian",
@@ -82,17 +108,28 @@ def color_name(rgb):
     else:
         return "Mixed/Dark"
 
+
+def analyze_face(image):
+    try:
+        from deepface import DeepFace
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "Missing dependency 'deepface'. Install project requirements before running predictions."
+        ) from exc
+
+    return DeepFace.analyze(
+        image,
+        actions=['emotion', 'age'],
+        enforce_detection=False
+    )
+
 # ------------------ FINAL PIPELINE ------------------
 
 def final_prediction(image):
 
     nationality = predict_nationality(image)
 
-    analysis = DeepFace.analyze(
-        image,
-        actions=['emotion', 'age'],
-        enforce_detection=False
-    )
+    analysis = analyze_face(image)
 
     emotion = analysis[0]['dominant_emotion']
     age = analysis[0]['age']
