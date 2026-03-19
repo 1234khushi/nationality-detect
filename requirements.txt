@@ -1,7 +1,7 @@
 streamlit
-numpy
+numpy==1.26.4
 Pillow
 joblib
 scikit-learn
-tensorflow
+tensorflow==2.16.1
 deepface
