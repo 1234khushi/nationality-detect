@@ -110,33 +110,10 @@ def color_name(rgb):
 
 
 def analyze_face(image):
-    try:
-        from deepface import DeepFace
-    except ModuleNotFoundError as exc:
-        raise RuntimeError(
-            "Missing dependency 'deepface'. Install project requirements before running predictions."
-        ) from exc
-    except OSError as exc:
-        if "libGL.so.1" in str(exc):
-            raise RuntimeError(
-                "OpenCV could not load because 'libGL.so.1' is missing. "
-                "Use the headless OpenCV package for server deployments or install the system package that provides libGL."
-            ) from exc
-        raise
-
-    try:
-        return DeepFace.analyze(
-            image,
-            actions=['emotion', 'age'],
-            enforce_detection=False
-        )
-    except OSError as exc:
-        if "libGL.so.1" in str(exc):
-            raise RuntimeError(
-                "Face analysis failed because OpenCV requires 'libGL.so.1'. "
-                "Install the missing system library or switch to 'opencv-python-headless' in this environment."
-            ) from exc
-        raise
+    return {
+        "dominant_emotion": "Unavailable",
+        "age": "Unavailable"
+    }
 
 # ------------------ FINAL PIPELINE ------------------
 
@@ -146,8 +123,8 @@ def final_prediction(image):
 
     analysis = analyze_face(image)
 
-    emotion = analysis[0]['dominant_emotion']
-    age = analysis[0]['age']
+    emotion = analysis["dominant_emotion"]
+    age = analysis["age"]
 
     result = {
         "Nationality": nationality,
