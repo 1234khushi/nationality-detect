@@ -5,3 +5,4 @@ joblib
 scikit-learn
 tensorflow==2.16.1
 deepface
+opencv-python-headless==4.11.0.86

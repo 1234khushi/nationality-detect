@@ -40,6 +40,11 @@ if uploaded_file is not None:
 
             except Exception as e:
                 st.error(f"Error during prediction: {e}")
+                if "libGL.so.1" in str(e) or "headless OpenCV" in str(e):
+                    st.info(
+                        "Deployment fix: install 'opencv-python-headless' and remove 'opencv-python' "
+                        "in Linux/server environments, or install the OS package that provides libGL."
+                    )
 
 # ------------------ RESULT DISPLAY ------------------
 if st.session_state.result is not None:

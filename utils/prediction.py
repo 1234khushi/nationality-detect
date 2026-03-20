@@ -116,12 +116,27 @@ def analyze_face(image):
         raise RuntimeError(
             "Missing dependency 'deepface'. Install project requirements before running predictions."
         ) from exc
+    except OSError as exc:
+        if "libGL.so.1" in str(exc):
+            raise RuntimeError(
+                "OpenCV could not load because 'libGL.so.1' is missing. "
+                "Use the headless OpenCV package for server deployments or install the system package that provides libGL."
+            ) from exc
+        raise
 
-    return DeepFace.analyze(
-        image,
-        actions=['emotion', 'age'],
-        enforce_detection=False
-    )
+    try:
+        return DeepFace.analyze(
+            image,
+            actions=['emotion', 'age'],
+            enforce_detection=False
+        )
+    except OSError as exc:
+        if "libGL.so.1" in str(exc):
+            raise RuntimeError(
+                "Face analysis failed because OpenCV requires 'libGL.so.1'. "
+                "Install the missing system library or switch to 'opencv-python-headless' in this environment."
+            ) from exc
+        raise
 
 # ------------------ FINAL PIPELINE ------------------
 
