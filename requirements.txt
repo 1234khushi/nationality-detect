@@ -4,5 +4,6 @@ Pillow
 joblib
 scikit-learn
 tensorflow==2.16.1
+tf-keras==2.16.0
 deepface
 opencv-python-headless==4.11.0.86
